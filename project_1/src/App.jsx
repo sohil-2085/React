@@ -1,7 +1,10 @@
+import Sohil from "./Sohil.jsx"
+
 function App() {
   return (
     <>
-    <h1>Hello Wrold</h1>
+      <Sohil />
+      <h1>Hello world</h1>
     </>
   )
 }
