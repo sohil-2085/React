@@ -25,6 +25,8 @@ function App() {
 
   const addValue = () => {
     setCount(count + 1);
+    // setCount(count + 1);
+    // setCount(count + 1);
   };
   const decValue = () => {
     setCount(count - 1);
