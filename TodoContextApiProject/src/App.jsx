@@ -3,18 +3,20 @@ import { TodoProvider } from "./contexts";
 import { TodoForm, TodoItem } from "./components";
 
 function App() {
-  
-  const [todos, setTodos] = useState([]);
+  // we can define the useState like this but to prevent the rendering issue with the useEffect we can also define the useState like second method
+  // const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    const savedTodos = localStorage.getItem("todos");
+    return savedTodos ? JSON.parse(savedTodos) : [];
+  });
 
   const addTodo = (todo) => {
-    setTodos((prev) => [{...todo }, ...prev]);
+    setTodos((prev) => [{ ...todo }, ...prev]);
   };
 
   const updateTodo = (id, todo) => {
     setTodos((prev) =>
-      prev.map((prevTodo) =>
-        prevTodo.id === id ? todo : prevTodo
-      ),
+      prev.map((prevTodo) => (prevTodo.id === id ? todo : prevTodo)),
     );
   };
 
@@ -32,17 +34,21 @@ function App() {
     );
   };
 
-  useEffect(() => {
-    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+  // if we are going to update todo with setTodos in the useEffect then it will cause the rendering issue in the code because react evaluates this in strictmode
+  // useEffect(() => {
+  //   const todos = JSON.parse(localStorage.getItem("todos") || "[]");
 
-    if (todos && Array.isArray(todos) && todos.length > 0) {
-      setTodos(todos);
-    }
-  }, []);
+  //   if (todos && Array.isArray(todos) && todos.length > 0) {
+  //     // setTodos(todos);
+  //     // setTimeout(() => {
+  //       setTodos(todos)
+  //     // }, 0);
+  //   }
+  // }, []);
 
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos))
-  }, [todos])
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
 
   return (
     <TodoProvider
@@ -53,12 +59,14 @@ function App() {
           <h1 className="text-2xl font-bold text-center mb-8 mt-2">
             Manage Your Todos
           </h1>
-          <div className="mb-4"><TodoForm /></div>
+          <div className="mb-4">
+            <TodoForm />
+          </div>
           <div className="flex flex-wrap gap-y-3">
             {/*Loop and Add TodoItem here */}
             {todos.map((todo) => (
               <div key={todo.id} className="w-full">
-                <TodoItem todo={todo}/>
+                <TodoItem todo={todo} />
               </div>
             ))}
           </div>
