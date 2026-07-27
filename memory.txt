@@ -1,0 +1,430 @@
+Here is a complete, production-ready code reference sheet for all 15 React hooks. You can bookmark this page to use as a quick cheat sheet in the future.
+------------------------------
+## Phase 1: The Core Fundamentals## 1. useState (State Management)
+
+import { useState } from 'react';
+
+export default function CounterApp() {
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState('');
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <input 
+        type="text" 
+        placeholder="Enter name" 
+        value={name} 
+        onChange={(e) => setName(e.target.value)} 
+      />
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <p>Hello {name || 'Guest'}, you clicked {count} times.</p>
+    </div>
+  );
+}
+
+## 2. useEffect (Side Effects & Lifecycle)
+
+import { useState, useEffect } from 'react';
+
+export default function DataFetcher() {
+  const [joke, setJoke] = useState('Loading...');
+  const [count, setCount] = useState(0);
+
+  // Run once on mount (empty dependency array)
+  useEffect(() => {
+    fetch('https://appspot.com')
+      .then(res => res.json())
+      .then(data => setJoke(`${data.setup} - ${data.punchline}`));
+  }, []);
+
+  // Run every time 'count' changes
+  useEffect(() => {
+    document.title = `Clicks: ${count}`;
+  }, [count]);
+
+  return (
+    <div>
+      <p><strong>Joke:</strong> {joke}</p>
+      <button onClick={() => setCount(count + 1)}>Click Count: {count}</button>
+    </div>
+  );
+}
+
+## 3. useContext (Global State Access) [1] 
+
+import { createContext, useContext, useState } from 'react';
+
+const ThemeContext = createContext(null);
+
+export default function ContextApp() {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <Navbar />
+    </ThemeContext.Provider>
+  );
+}
+
+function Navbar() {
+  const { theme, setTheme } = useContext(ThemeContext);
+  return (
+    <nav style={{ background: theme === 'light' ? '#fff' : '#333', color: theme === 'light' ? '#000' : '#fff', padding: '10px' }}>
+      <p>Active Theme: {theme}</p>
+      <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>Toggle Theme</button>
+    </nav>
+  );
+}
+
+------------------------------
+## Phase 2: Direct DOM & Performance Tuning## 4. useRef (DOM Access & Mutable Values) [2, 3, 4] 
+
+import { useRef, useEffect, useState } from 'react';
+
+export default function RefApp() {
+  const inputRef = useRef(null);
+  const timerRef = useRef(null);
+  const [seconds, setSeconds] = useState(0);
+
+  // 1. Focus input on mount using DOM ref
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
+  // 2. Persist interval ID without causing re-renders
+  const startTimer = () => {
+    if (timerRef.current) return;
+    timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
+  };
+
+  const stopTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} type="text" placeholder="Auto-focused field" />
+      <hr />
+      <p>Timer: {seconds}s</p>
+      <button onClick={startTimer}>Start</button>
+      <button onClick={stopTimer}>Stop</button>
+    </div>
+  );
+}
+
+## 5. useMemo (Caching Expensive Computations) [5, 6, 7] 
+
+import { useState, useMemo } from 'react';
+
+export default function MemoApp() {
+  const [query, setQuery] = useState('');
+  const [count, setCount] = useState(0);
+
+  // Simulating an expensive 10,000 item list
+  const largeList = useMemo(() => {
+    return Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
+  }, []);
+
+  // Only re-runs when 'query' changes. Clicking 'count' won't re-trigger this.
+  const filteredList = useMemo(() => {
+    return largeList.filter(item => item.toLowerCase().includes(query.toLowerCase()));
+  }, [query, largeList]);
+
+  return (
+    <div>
+      <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter items..." />
+      <button onClick={() => setCount(count + 1)}>Unrelated Re-render ({count})</button>
+      <p>Found matches: {filteredList.length}</p>
+    </div>
+  );
+}
+
+## 6. useCallback (Caching Function References) [8, 9] 
+
+import React, { useState, useCallback } from 'react';
+
+// Optimized Child: Only re-renders if props change
+const ExpensiveButton = React.memo(({ onClick }) => {
+  console.log('Child Rendered!');
+  return <button onClick={onClick}>Child Click Button</button>;
+});
+
+export default function CallbackApp() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState('');
+
+  // Prevents the function from being recreated on every parent text-input render
+  const handleChildClick = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []);
+
+  return (
+    <div>
+      <input value={text} onChange={e => setText(e.target.value)} placeholder="Type here..." />
+      <p>Count: {count}</p>
+      <ExpensiveButton onClick={handleChildClick} />
+    </div>
+  );
+}
+
+------------------------------
+## Phase 3: Advanced State & Custom Architecture## 7. useReducer (Complex State Management) [10, 11] 
+
+import { useReducer } from 'react';
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'add': return [...state, { id: Date.now(), text: action.payload }];
+    case 'delete': return state.filter(todo => todo.id !== action.payload);
+    default: return state;
+  }
+}
+
+export default function ReducerApp() {
+  const [todos, dispatch] = useReducer(reducer, []);
+
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: 'add', payload: 'New Task' })}>Add Task</button>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            {todo.text} <button onClick={() => dispatch({ type: 'delete', payload: todo.id })}>X</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+## 8. useId (Unique Accessible IDs) [12, 13] 
+
+import { useId } from 'react';
+
+function AccessibleInput({ label }) {
+  const id = useId(); // Generates globally unique, stable HTML IDs
+  return (
+    <div style={{ marginBottom: '10px' }}>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type="text" />
+    </div>
+  );
+}
+
+export default function FormApp() {
+  return (
+    <form>
+      <AccessibleInput label="First Name: " />
+      <AccessibleInput label="Last Name: " />
+    </form>
+  );
+}
+
+## 9. Custom Hook + useDebugValue (DevTools Inspection) [14, 15] 
+
+import { useState, useEffect, useDebugValue } from 'react';
+
+// Custom Hook definition
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const online = () => setIsOnline(true);
+    const offline = () => setIsOnline(false);
+    window.addEventListener('online', online);
+    window.addEventListener('offline', offline);
+    return () => {
+      window.removeEventListener('online', online);
+      window.removeEventListener('offline', offline);
+    };
+  }, []);
+
+  // Adds a clear label visible inside React DevTools
+  useDebugValue(isOnline ? 'Online Now' : 'Offline Now');
+
+  return isOnline;
+}
+
+export default function StatusApp() {
+  const isOnline = useOnlineStatus();
+  return <h1>Status: {isOnline ? '🟢 Connected' : '🔴 Disconnected'}</h1>;
+}
+
+------------------------------
+## Phase 4: Concurrent UI & Smooth UX## 10. useTransition (Prioritizing UI Updates) [16, 17, 18] 
+
+import { useState, useTransition } from 'react';
+
+export default function TransitionApp() {
+  const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState('home');
+  const [items, setItems] = useState([]);
+
+  const selectTab = (nextTab) => {
+    setTab(nextTab); // 1. High priority: instantly update active tab button style
+
+    // 2. Low priority: wrap heavy UI render loop so application remains unblocked
+    startTransition(() => {
+      const complexData = Array.from({ length: 20000 }, (_, i) => `Data Point ${i}`);
+      setItems(complexData);
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={() => selectTab('home')}>Home</button>
+      <button onClick={() => selectTab('heavy-graph')}>Heavy Graph</button>
+      {isPending && <p>Processing intensive UI update...</p>}
+      {tab === 'heavy-graph' && items.map((item, i) => <div key={i}>{item}</div>)}
+    </div>
+  );
+}
+
+## 11. useDeferredValue (Deferring Slow Rendering Components) [19] 
+
+import { useState, useDeferredValue, useMemo } from 'react';
+
+export default function DeferredApp() {
+  const [text, setText] = useState('');
+  const deferredText = useDeferredValue(text); // Keeps text updates instant while lagging results behind
+
+  return (
+    <div>
+      <input value={text} onChange={e => setText(e.target.value)} placeholder="Type fast..." />
+      <SlowList query={deferredText} />
+    </div>
+  );
+}
+
+function SlowList({ query }) {
+  const list = useMemo(() => {
+    if (!query) return [];
+    // Simulating slow operations matching the deferred string
+    return Array.from({ length: 5000 }, (_, i) => `Result for ${query} (#${i})`);
+  }, [query]);
+
+  return <ul>{list.map((item, i) => <li key={i}>{item}</li>)}</ul>;
+}
+
+------------------------------
+## Phase 5: Specialized & Edge-Case Hooks## 12. useLayoutEffect (Synchronous Layout Measurements) [20, 21, 22] 
+
+import { useState, useRef, useLayoutEffect } from 'react';
+
+export default function LayoutEffectApp() {
+  const [boxWidth, setBoxWidth] = useState(0);
+  const divRef = useRef(null);
+
+  // Fires synchronously after all DOM mutations but BEFORE the screen visual paint.
+  // Prevents visual flashing or artifact stuttering.
+  useLayoutEffect(() => {
+    if (divRef.current) {
+      setBoxWidth(divRef.current.getBoundingClientRect().width);
+    }
+  }, []);
+
+  return (
+    <div>
+      <div ref={divRef} style={{ width: '45%', background: 'lightblue' }}>Target Box</div>
+      <p>Calculated precise physical width on mount: {boxWidth}px</p>
+    </div>
+  );
+}
+
+## 13. useImperativeHandle (Exposing Child Actions Upward) [23] 
+
+import { useRef, useImperativeHandle, forwardRef, useState } from 'react';
+
+// Child Modal Component
+const CustomModal = forwardRef((props, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Custom interface exposed up to the parent component
+  useImperativeHandle(ref, () => ({
+    openModal: () => setIsOpen(true),
+    closeModal: () => setIsOpen(false),
+  }));
+
+  if (!isOpen) return null;
+  return <div style={{ border: '2px solid black', padding: '10px' }}>Pop up modal window!</div>;
+});
+
+// Parent Core Component
+export default function ImperativeApp() {
+  const modalRef = useRef();
+
+  return (
+    <div>
+      <button onClick={() => modalRef.current.openModal()}>Open Remote Modal</button>
+      <button onClick={() => modalRef.current.closeModal()}>Close Remote Modal</button>
+      <CustomModal ref={modalRef} />
+    </div>
+  );
+}
+
+## 14. useSyncExternalStore (Syncing with External Stores) [24, 25] 
+
+import { useSyncExternalStore } from 'react';
+
+// Helper functions subscribing directly to the native browser API
+function subscribe(callback) {
+  window.addEventListener('resize', callback);
+  return () => window.removeEventListener('resize', callback);
+}
+function getSnapshot() {
+  return window.innerWidth;
+}
+
+export default function WindowTrackerApp() {
+  // Directly binds to an external non-react store state without traditional state loops
+  const width = useSyncExternalStore(subscribe, getSnapshot);
+
+  return <h1>Current Browser Inner Width: {width}px</h1>;
+}
+
+## 15. useInsertionEffect (CSS-in-JS Style Injection) [26, 27] 
+
+import { useInsertionEffect } from 'react';
+
+export default function StyleInjectorApp() {
+  // Fires strictly BEFORE layout effects and DOM generation.
+  // Intended purely for injecting dynamic CSS rules into the document head.
+  useInsertionEffect(() => {
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `.dynamic-box { width: 100px; height: 100px; background: purple; }`;
+    document.head.appendChild(styleTag);
+    return () => document.head.removeChild(styleTag);
+  }, []);
+
+  return <div className="dynamic-box"></div>;
+}
+
+Let me know if you would like me to clarify the logic or parameters of any specific hook from this reference sheet!
+
+[1] [https://internshala.com](https://internshala.com/blog/tcs-reactjs-interview-questions/)
+[2] [https://dev.to](https://dev.to/pedrotech/a-complete-guide-to-all-react-hooks-for-beginners-5cio)
+[3] [https://dev.to](https://dev.to/dayvster/common-react-hook-questions-4901)
+[4] [https://www.youtube.com](https://www.youtube.com/watch?v=oCMsejd6ovM)
+[5] [https://trainings.internshala.com](https://trainings.internshala.com/blog/hooks-in-react/)
+[6] [https://www.linkedin.com](https://www.linkedin.com/pulse/5-top-most-commonly-used-react-hooks-beginners-hamza-siddique-fhegf)
+[7] [https://refine.dev](https://refine.dev/blog/react-usememo/)
+[8] [https://medium.com](https://medium.com/@ksshravan667/14-days-of-react-day-5-react-hooks-usestate-useref-useeffect-usememo-usecallback-8599a14c4e2b)
+[9] [https://mvineetsharma.medium.com](https://mvineetsharma.medium.com/react-hooks-deep-dive-evolution-7601fc361f58)
+[10] [https://blog.openreplay.com](https://blog.openreplay.com/understand-react-hooks-with-these-visual-guide-cheatsheets/)
+[11] [https://www.youtube.com](https://www.youtube.com/watch?v=CvrBYYh5osw)
+[12] [https://blog.logrocket.com](https://blog.logrocket.com/react-hooks-cheat-sheet-solutions-common-problems/)
+[13] [https://www.youtube.com](https://www.youtube.com/watch?v=x85JwZkUrLo)
+[14] [https://www.linkedin.com](https://www.linkedin.com/pulse/demystifying-react-hooks-usage-examples-common-mistakes-hasibul-islam)
+[15] [https://mvineetsharma.medium.com](https://mvineetsharma.medium.com/react-hooks-deep-dive-evolution-7601fc361f58)
+[16] [https://www.turbodocx.com](https://www.turbodocx.com/blog/react-hooks-you-need-to-know)
+[17] [https://www.youtube.com](https://www.youtube.com/watch?v=1xjSQJWejZM)
+[18] [https://medium.com](https://medium.com/@deval93/10-react-hooks-explained-with-real-examples-2025-edition-the-guide-i-wish-i-had-3-years-ago-e0b086f761a4)
+[19] [https://medium.com](https://medium.com/@ignatovich.dm/understanding-usedeferredvalue-in-react-enhancing-performance-with-deferred-rendering-ec8eb28aa997)
+[20] [https://www.youtube.com](https://www.youtube.com/watch?v=9GAt97z8Jc4)
+[21] [https://saigontechnology.com](https://saigontechnology.com/blog/advanced-hooks-in-react/)
+[22] [https://the-guild.dev](https://the-guild.dev/blog/react-hooks-system)
+[23] [https://blog.stackademic.com](https://blog.stackademic.com/mastering-useimperativehandle-in-react-react-native-a-beginners-guide-d3a2ad382782)
+[24] [https://www.youtube.com](https://www.youtube.com/watch?v=WBPUz1u2rZ8)
+[25] [https://medium.com](https://medium.com/@dezsays/sync-your-data-effortlessly-with-reacts-usesyncexternalstore-hook-9893a4d211cd)
+[26] [https://www.uxpin.com](https://www.uxpin.com/studio/blog/react-hooks/)
+[27] [https://medium.com](https://medium.com/@akashsdas_dev/useinsertioneffect-react-hook-f71f02df63cf)
