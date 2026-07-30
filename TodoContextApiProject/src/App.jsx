@@ -35,16 +35,16 @@ function App() {
   };
 
   // if we are going to update todo with setTodos in the useEffect then it will cause the rendering issue in the code because react evaluates this in strictmode
-  // useEffect(() => {
-  //   const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+  useEffect(() => {
+    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
 
-  //   if (todos && Array.isArray(todos) && todos.length > 0) {
-  //     // setTodos(todos);
-  //     // setTimeout(() => {
-  //       setTodos(todos)
-  //     // }, 0);
-  //   }
-  // }, []);
+    // if (todos && Array.isArray(todos) && todos.length > 0) {
+      // setTodos(todos);
+      // setTimeout(() => {
+        setTodos(todos)
+      // }, 0);
+    // }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
