@@ -12,7 +12,8 @@ function Cart({ cart }) {
           </div>
 
           <div className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-600">
-            {cart.length} Items
+            {cart.reduce((total, item) => total + (item.quantity || 1), 0)}{" "}
+            Items
           </div>
         </div>
 
@@ -26,12 +27,17 @@ function Cart({ cart }) {
                 key={item.id}
                 className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
               >
-                <span className="font-medium text-slate-700">
-                  {item.title}
-                </span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-slate-700">
+                    {item.title}
+                  </span>
+                  <span className="text-sm text-slate-500">
+                    Qty: {item.quantity || 1}
+                  </span>
+                </div>
 
                 <span className="font-semibold text-blue-600">
-                  ₹{item.price}
+                  ₹{(Number(item.price) * (item.quantity || 1)).toFixed(2)}
                 </span>
               </div>
             ))
@@ -43,7 +49,7 @@ function Cart({ cart }) {
           <div className="flex items-center justify-between">
             <span>Items</span>
             <span className="font-medium text-slate-800">
-              {cart.length}
+              {cart.reduce((total, item) => total + (item.quantity || 1), 0)}
             </span>
           </div>
 
@@ -55,7 +61,14 @@ function Cart({ cart }) {
           <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-base font-semibold text-slate-800">
             <span>Total</span>
             <span className="font-medium text-slate-800">
-              ₹{cart.reduce((acc, curr) => acc + Number(curr.price || 0), 0).toFixed(2)}
+              ₹
+              {cart
+                .reduce(
+                  (acc, curr) =>
+                    acc + Number(curr.price || 0) * (curr.quantity || 1),
+                  0,
+                )
+                .toFixed(2)}
             </span>
           </div>
         </div>

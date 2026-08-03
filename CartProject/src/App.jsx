@@ -26,9 +26,20 @@ function App() {
   const sortedProducts = [...filteredProducts];
 
   const addToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product])
-  }
-  console.log(cart)
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        );
+      }
+
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
 
   switch (sort) {
     case "LtoH":
@@ -67,8 +78,11 @@ function App() {
         sort={sort}
         setSort={setSort}
       />
-      <ProductList products={filteredProducts && sortedProducts} addToCart={addToCart} />
-      <Cart cart={cart}/>
+      <ProductList
+        products={filteredProducts && sortedProducts}
+        addToCart={addToCart}
+      />
+      <Cart cart={cart} />
     </>
   );
 }
