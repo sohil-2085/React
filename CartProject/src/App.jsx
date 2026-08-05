@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Cart from "./components/Cart/Cart";
 import Filter from "./components/Filter/Filter";
 import ProductList from "./components/ProductList/ProductList";
@@ -10,6 +10,7 @@ function App() {
   const [filter, setFilter] = useState("All");
   const [sort, setSort] = useState("Default");
   const [cart, setCart] = useState([]);
+  const searchInputRef = useRef(null);
 
   // console.log("Filtering and Sorting is running out...");
   const filteredAndSortedProducts = useMemo(() => {
@@ -53,6 +54,13 @@ function App() {
     return sortedProducts;
   }, [search, filter, sort]);
 
+  const resetFilters = useCallback(() => {
+    setSearch("");
+    setFilter("All");
+    setSort("Default");
+    searchInputRef.current?.focus();
+  }, []);
+
   const addToCart = useCallback((product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
@@ -74,12 +82,18 @@ function App() {
       <h1 className="text-center font-bold text-3xl py-4">
         🛒 Product Dashboard
       </h1>
-      <SearchBar search={search} setSearch={setSearch} />
+      <SearchBar
+        search={search}
+        setSearch={setSearch}
+        inputRef={searchInputRef}
+      />
       <Filter
         filter={filter}
         setFilter={setFilter}
         sort={sort}
         setSort={setSort}
+        onClearFilters={resetFilters}
+        productCount={filteredAndSortedProducts.length}
       />
       <ProductList products={filteredAndSortedProducts} addToCart={addToCart} />
       <Cart cart={cart} />

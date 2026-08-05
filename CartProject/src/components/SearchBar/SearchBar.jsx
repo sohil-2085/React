@@ -1,4 +1,10 @@
-function SearchBar({ search, setSearch }) {
+import { useEffect } from "react";
+
+function SearchBar({ search, setSearch, inputRef }) {
+  useEffect(() => {
+    inputRef?.current?.focus();
+  }, [inputRef]);
+
   return (
     <>
       <div className="flex gap-2 text-center pt-8 pb-8 pl-32 pr-32">
@@ -8,6 +14,7 @@ function SearchBar({ search, setSearch }) {
           className="border w-full p-2 rounded-xl border-gray-400"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          ref={inputRef}
         />
         {/* <button
           className="border rounded-xl p-4 cursor-pointer hover:bg-gray-200 transition-all border-gray-400"
