@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Cart from "./components/Cart/Cart";
 import Filter from "./components/Filter/Filter";
 import ProductList from "./components/ProductList/ProductList";
@@ -11,21 +11,49 @@ function App() {
   const [sort, setSort] = useState("Default");
   const [cart, setCart] = useState([]);
 
-  console.log("Filtering and Sorting is running...");
+  // console.log("Filtering and Sorting is running out...");
+  const filteredAndSortedProducts = useMemo(() => {
+    // console.log("Filtering and Sorting is running in...");
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const filteredProducts = products.filter((product) => {
+      const matchesSearch = product.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-    const matchesCategory = filter === "All" || product.category === filter;
+      const matchesCategory = filter === "All" || product.category === filter;
 
-    return matchesSearch && matchesCategory;
-  });
+      return matchesSearch && matchesCategory;
+    });
+    const sortedProducts = [...filteredProducts];
 
-  const sortedProducts = [...filteredProducts];
+    switch (sort) {
+      case "LtoH":
+        sortedProducts.sort((a, b) => a.price - b.price);
+        break;
 
-  const addToCart = (product) => {
+      case "HtoL":
+        sortedProducts.sort((a, b) => b.price - a.price);
+        break;
+
+      case "Rating":
+        sortedProducts.sort((a, b) => b.rating - a.rating);
+        break;
+
+      case "AtoZ":
+        sortedProducts.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+
+      case "ZtoA":
+        sortedProducts.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+
+      default:
+        break;
+    }
+    return sortedProducts;
+  }, [search, filter, sort]);
+
+  const addToCart = useCallback((product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
 
@@ -39,32 +67,7 @@ function App() {
 
       return [...prevCart, { ...product, quantity: 1 }];
     });
-  };
-
-  switch (sort) {
-    case "LtoH":
-      sortedProducts.sort((a, b) => a.price - b.price);
-      break;
-
-    case "HtoL":
-      sortedProducts.sort((a, b) => b.price - a.price);
-      break;
-
-    case "Rating":
-      sortedProducts.sort((a, b) => b.rating - a.rating);
-      break;
-
-    case "AtoZ":
-      sortedProducts.sort((a, b) => a.title.localeCompare(b.title));
-      break;
-
-    case "ZtoA":
-      sortedProducts.sort((a, b) => b.title.localeCompare(a.title));
-      break;
-
-    default:
-      break;
-  }
+  }, []);
 
   return (
     <>
@@ -78,10 +81,7 @@ function App() {
         sort={sort}
         setSort={setSort}
       />
-      <ProductList
-        products={filteredProducts && sortedProducts}
-        addToCart={addToCart}
-      />
+      <ProductList products={filteredAndSortedProducts} addToCart={addToCart} />
       <Cart cart={cart} />
     </>
   );

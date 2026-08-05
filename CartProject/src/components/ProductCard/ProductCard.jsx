@@ -3,9 +3,11 @@ import {
   MdAttachMoney,
   MdOutlineStar,
 } from "react-icons/md";
+import React from "react";
 
 function ProductCard({ product, addToCart }) {
   const { title, category, price, rating, image } = product;
+  console.log("ProductCard Render:", product.title);
 
   return (
     <div className="group overflow-hidden rounded-3xl border border-white/10 bg-slate-800 shadow-xl shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-2xl">
@@ -32,9 +34,10 @@ function ProductCard({ product, addToCart }) {
             <span>Rating: {rating}</span>
           </div>
         </div>
-        <button className="mt-6 w-full rounded-2xl border cursor-pointer border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-100"
+        <button
+          className="mt-6 w-full rounded-2xl border cursor-pointer border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-100"
           onClick={() => addToCart(product)}
-          >
+        >
           Add to Cart
         </button>
       </div>
@@ -42,4 +45,4 @@ function ProductCard({ product, addToCart }) {
   );
 }
 
-export default ProductCard;
+export default React.memo(ProductCard);
